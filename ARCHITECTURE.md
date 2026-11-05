@@ -35,5 +35,32 @@ Tradeoffs:
 - Scheduled notifications require a separate process to run periodically (exposed via API endpoint). Ideally in a production scenario we introduce a scheduled job to check for notifications ready to be delivered.
 - Delivery may occur later than scheduled_at if processing is delayed
 
+### Monthly FILTER Notification Idempotency
+Active FILTER notifications must be delivered to eligible accounts at most once per calendar month. Accounts may become eligible at any point while a notification is active. Decided to generate idempotency keys for FILTER deliveries using the notification definition ID, account ID, and calendar month
+
+Tradeoffs:
+- FILTER processing must run repeatedly to identify newly eligible accounts. Ideally in a production environment we would introduce a Change Data Capture or a scheduler that runs frequently (e.g. every 30 seconds) to repeatedly determine newly eligible accounts
+ - Default UUID-based delivery keys do not provide reliable EVENT retry idempotency. EVENT processing would need stable identifiers for triggering events
+
+ ### Calendar-Month Notification Retention
+ The specification requires notifications to remain visible for two static months rather than a rolling two-month period.
+ Decided to treat the delivery month and the following calendar month as the visibility window. For example, notifications delivered in November remain visible through December 31 and expire on January 1.
+
+Use the first day of the previous calendar month as the cutoff when retrieving notifications:
+
+del.delivered_at >= DATE_FORMAT(
+    CURRENT_DATE - INTERVAL 1 MONTH,
+    '%Y-%m-01'
+)
+
+Expired notification deliveries are permanently removed through a separate cleanup operation
+
+Tradeoffs
+- Made the decision to delete the expired notifications via a separate process. If I had more time I would consider marking these notifications as EXPIRED and wouldn't allow the system to surface them for users. In a production environment, it could be important to maintain older expired notifications for logging or other historical purposes
+
+- The cleanup job has to be triggered manually. Ideally this is also something that is run semi-regularly (once a day).
+
+
+
 ### Possible Failure Scenarios
 - I identified a failure scenario where CSV deliveries could be created without recipients being marked as process. Originally I had one DB transaction where I was adding a delivery to notification_deliveries and then a separate transaction to mark the recipient as processed in notification_csv_recipients. I changed this to do both transactions atomically and avoid this edge case where one transaction succeeds and the other fails

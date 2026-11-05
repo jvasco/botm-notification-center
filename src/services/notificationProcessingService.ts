@@ -1,6 +1,6 @@
 import {createNotificationDeliveries} from './notificationDeliveryService';
 import {getActiveNotificationDefinitions} from './notificationDefinitionService';
-import {getFilterRecipients, getCsvRecipients, markCsvRecipientsAsProcessed} from './recipientService';
+import {getFilterRecipients} from './recipientService';
 
 export async function processFilterNotifications(): Promise<void> {
     const definitions = await getActiveNotificationDefinitions();
@@ -11,7 +11,10 @@ export async function processFilterNotifications(): Promise<void> {
         }
 
         const accountIds = await getFilterRecipients(definition.filters);
-        const createdCount = await createNotificationDeliveries(definition.id, accountIds);
+        const month = new Date().toISOString().slice(0, 7);
+        const createdCount = await createNotificationDeliveries(definition.id, accountIds,
+             (accountId) => `${definition.id}:${accountId}:${month}`
+);
         console.log(`Created ${createdCount} notification deliveries for definition: ${definition.name}`);
     }
 }

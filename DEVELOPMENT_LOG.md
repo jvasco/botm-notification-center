@@ -70,4 +70,18 @@ Will use this file to keep track of progress on the project
 - Tested delayed notification creation, scheduled processing, and notification visibility through the account notifications endpoint
 - Verified that rerunning scheduled processing does not redeliver already-delivered notifications
 
+## Session 5 - FILTER Idempotency, Continuous Eligibility, and Notification Visibility
 
+### Goals
+- Implement the requirement that active FILTER notifications can be delivered once per calendar month.
+- Prevent duplicate deliveries when FILTER processing runs multiple times.
+- Determine how to support accounts becoming eligible after notification activation. 
+- Address two static calendar month requirement
+
+### Work Completed
+- Updated createNotificationDeliveries() to accept an optional idempotency key generator
+- Implemented monthly idempotency keys for FILTER notifications using the notification definition ID, account ID, and calendar month
+- Added handling for MySQL duplicate-key errors to skip existing deliveries without failing the entire processing run
+- Updated the default delivery key generation to use UUIDs rather than minute-based timestamps.
+- Updated notification retrieval to use calendar-month boundaries instead of a rolling one-month window
+- Added a cleanup function to delete expired notification deliveries

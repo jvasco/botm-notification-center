@@ -1,10 +1,11 @@
-import { randomUUID } from 'crypto';
 import { ResultSetHeader } from 'mysql2';
 import {pool} from '../database';
+import { randomUUID } from 'crypto';
 
 export async function createNotificationDeliveries(
     notificationDefinitionId: number,
     accountIds: number[],
+    idempotencyKeyGenerator?: (accountId: number) => string
     
 ): Promise<number> {
     if (accountIds.length === 0) {
@@ -13,15 +14,23 @@ export async function createNotificationDeliveries(
 
     let createdCount = 0;
     for (const accountId of accountIds) {
-        const minute = Math.floor(Date.now() / 60_000);
-        const idempotencyKey = `${notificationDefinitionId}:${accountId}:${minute}`;
-        const [result] = await pool.execute<ResultSetHeader>(
+        const idempotencyKey = idempotencyKeyGenerator ? idempotencyKeyGenerator(accountId) : `${notificationDefinitionId}:${accountId}:${randomUUID()}`;
+        try{
+            const [result] = await pool.execute<ResultSetHeader>(
             'INSERT INTO notification_deliveries (notification_definition_id, account_id, delivered_at, idempotency_key) VALUES (?, ?, NOW(), ?)',
             [notificationDefinitionId, accountId, idempotencyKey]
         );
         createdCount += result.affectedRows;
+    } catch (error) {
+        if ((error as any).code === 'ER_DUP_ENTRY') {
+            console.warn(`Duplicate entry for notification_definition_id: ${notificationDefinitionId}, account_id: ${accountId}, idempotency_key: ${idempotencyKey}. Skipping.`);
+        } else {
+            throw error;
+        }
     }
-    return createdCount;
+}
+return createdCount;
+    
 }
 
 export async function getAccountNotifications(accountId: number): Promise<any[]> {
@@ -40,7 +49,10 @@ export async function getAccountNotifications(accountId: number): Promise<any[]>
         JOIN notification_definitions def 
         ON del.notification_definition_id = def.id 
         WHERE del.account_id = ? 
-        AND del.delivered_at >= NOW() - INTERVAL 1 MONTH
+        AND del.delivered_at >= DATE_FORMAT(
+            CURRENT_DATE - INTERVAL 1 MONTH,
+            '%Y-%m-01'
+        )
         ORDER BY del.delivered_at DESC
         `,
         [accountId]
@@ -54,4 +66,11 @@ export async function markNotificationAsClicked(notificationDeliveryId: number):
         [notificationDeliveryId]
     );
     return result.affectedRows > 0;
+}
+
+export async function deleteExpiredNotifications(): Promise<number> {
+    const [result] = await pool.execute<ResultSetHeader>(
+        'DELETE FROM notification_deliveries WHERE delivered_at < DATE_FORMAT(CURRENT_DATE - INTERVAL 1 MONTH, "%Y-%m-01")'
+    );
+    return result.affectedRows;
 }
