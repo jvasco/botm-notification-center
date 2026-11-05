@@ -21,6 +21,11 @@ export async function getActiveNotificationDefinitions(): Promise<NotificationDe
       ON nd.id = f.notification_definition_id
     WHERE nd.is_active = 1
     AND nd.removed_at IS NULL
+    AND (
+      type <> 'CSV'
+      OR scheduled_at IS NULL
+      OR scheduled_at <= NOW()
+  )
   `);
 
   const definitions = new Map<number, NotificationDefinition>();
