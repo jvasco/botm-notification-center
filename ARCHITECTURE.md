@@ -20,3 +20,6 @@ This service supports three types of notification mechanisms:
 - I've built a basic assumption on what the accounts table could possibly look like.
 
 - Multiple rows per notification_definition for different filters vs one row containing all filters. I chose to have multiple rows per definition instead of storing all filters in one single row for each definition. This is a trade off (space vs cleanliness) but in my opinion this approach is much more readable and prevents the possibility of bad data in our filters
+
+### Possible Failure Scenarios
+- I identified a failure scenario where CSV deliveries could be created without recipients being marked as process. Originally I had one DB transaction where I was adding a delivery to notification_deliveries and then a separate transaction to mark the recipient as processed in notification_csv_recipients. I changed this to do both transactions atomically and avoid this edge case where one transaction succeeds and the other fails

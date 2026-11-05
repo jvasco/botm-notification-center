@@ -1,6 +1,6 @@
 import { pool } from "../database";
 import { NotificationFilter } from "../types/notification";
-import { RowDataPacket } from "mysql2";
+import { RowDataPacket, ResultSetHeader } from "mysql2";
 
 interface AccountRow extends RowDataPacket {
   id: number;
@@ -75,3 +75,26 @@ export async function getFilterRecipients(
 
   return rows.map((row) => row.id);
 }
+
+// export async function getCsvRecipients( notificationDefinitionId: number): Promise<number[]> {
+//   const [rows] = await pool.execute<AccountRow[]>(
+//     `SELECT account_id AS id FROM notification_csv_recipients 
+//     WHERE notification_definition_id = ?
+//     AND status = 'PENDING'
+//     `,
+//     [notificationDefinitionId]
+
+//   );
+//   return rows.map((row) => row.id);
+// }
+
+// export async function markCsvRecipientsAsProcessed(notificationDefinitionId: number, accountIds: number[]): Promise<void> {
+//   await pool.execute<ResultSetHeader>(
+//     `UPDATE notification_csv_recipients 
+//     SET status = 'PROCESSED' 
+//     WHERE notification_definition_id = ? 
+//     AND status = 'PENDING' 
+//     AND account_id IN (${accountIds.map(() => '?').join(', ')})`,
+//     [notificationDefinitionId, ...accountIds]
+//   );
+// }

@@ -1,6 +1,8 @@
 import Router from '@koa/router';
-import { processFilterNotifications } from "../services/notificationProcessingService";
-import { getAccountNotifications } from "../services/notificationDeliveryService";
+import { processCsvNotification, processFilterNotifications } from "../services/notificationProcessingService";
+import { getAccountNotifications, markNotificationAsClicked } from "../services/notificationDeliveryService";
+import { getActiveNotificationDefinitions } from '../services/notificationDefinitionService';
+import { processNotificationEvent } from '../services/notificationEventService';
 const router = new Router();
 
 router.post("/notifications/process-filter-notifications", async (ctx) => {
@@ -34,6 +36,77 @@ router.get("/notifications/get-account-notifications/:accountId", async (ctx) =>
     }
 });
 
+router.patch("/notifications/:notificationDeliveryId/click", async (ctx) => {
+    const notificationDeliveryId = Number(ctx.params.notificationDeliveryId);
+    if (isNaN(notificationDeliveryId)) {
+        ctx.status = 400;
+        ctx.body = { message: "Invalid notificationDeliveryId parameter." };
+        return;
+    }
+
+    try {
+        const success = await markNotificationAsClicked(notificationDeliveryId);
+        ctx.status = success ? 200 : 404;
+        ctx.body = success 
+        ? { message: "Notification marked as clicked." } 
+        : { message: "Notification not found or already clicked." };   
+    } catch (error) {
+        console.error("Error marking notification as clicked:", error);
+        ctx.status = 500;
+        ctx.body = { message: "An error occurred while marking notification as clicked." };
+    }
+});
+
+router.post("/notifications/process-csv-notifications", async (ctx) => {
+    try {
+        const definitions = await getActiveNotificationDefinitions();
+        let totalCreatedCount = 0;
+        for (const definition of definitions) {
+            if (definition.type === "CSV") {
+                const createdCount = await processCsvNotification(definition.id);
+                totalCreatedCount += createdCount;
+                console.log(`Created ${createdCount} notification deliveries for CSV definition: ${definition.name}`);
+            }
+        }
+        ctx.status = 200;
+        ctx.body = { message: "CSV notifications processed successfully.",
+            deliveriesCreated: totalCreatedCount };
+    } catch (error) {
+        console.error("Error processing CSV notifications:", error);
+        ctx.status = 500;
+        ctx.body = { message: "An error occurred while processing CSV notifications." };
+    }
+});
+
+router.post("/notifications/process-event", async (ctx) => {
+    const { eventType, accountId } = ctx.request.body as {
+        eventType?: string;
+        accountId?: number;
+    };
+
+    const validEventTypes = ["SHIPPED", "ENROLLED", "AUDIOBOOK_AVAILABLE"];
+    if (!eventType || !validEventTypes.includes(eventType)) {
+        ctx.status = 400;
+        ctx.body = { message: "Invalid or missing eventType. Valid values are: SHIPPED, ENROLLED, AUDIOBOOK_AVAILABLE." };
+        return;
+    }
+
+    if (!accountId || isNaN(accountId)) {
+        ctx.status = 400;
+        ctx.body = { message: "Invalid or missing accountId." };
+        return;
+    }
+
+    try {
+        const createdCount = await processNotificationEvent(eventType as any, accountId);
+        ctx.status = 200;
+        ctx.body = { message: `Processed event ${eventType} for account ${accountId}.`, deliveriesCreated: createdCount };
+    } catch (error) {
+        console.error(`Error processing event ${eventType} for account ${accountId}:`, error);
+        ctx.status = 500;
+        ctx.body = { message: "An error occurred while processing the notification event." };
+    }
+});
 
 export default router;
 

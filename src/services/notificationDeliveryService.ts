@@ -47,3 +47,11 @@ export async function getAccountNotifications(accountId: number): Promise<any[]>
     );
     return rows as any[];
 }
+
+export async function markNotificationAsClicked(notificationDeliveryId: number): Promise<boolean> {
+    const [result] = await pool.execute<ResultSetHeader>(
+        'UPDATE notification_deliveries SET clicked_at = NOW() WHERE id = ? AND clicked_at IS NULL',
+        [notificationDeliveryId]
+    );
+    return result.affectedRows > 0;
+}
