@@ -55,3 +55,19 @@ Will use this file to keep track of progress on the project
 - Added an endpoint to trigger event processing using an event type (SHIPPED, ENROLLED, and AUDIOBOOK_AVAILABLE) and account ID
 - Successfully tested imediate EVENT notification processing through the API
 
+## Session 4 - Implement Delays for Event Notification Processing
+
+### Goals
+- Support delayed delivery for EVENT notifications using delay_days
+- Test scheduling and delivery ent to end
+
+### Work Completed
+- Added a nullable scheduled_at column to notification_deliveries
+- Updated delivered_at to allow NULL for notifications that have not yet been delivered
+- Modified EVENT processing to support both immediate and delayed notifications based on delay_days 
+- Implemented processScheduledNotifications() to deliver pending notifications once their scheduled time has arrived
+- Added a POST endpoint to manually trigger scheduled notification processing
+- Tested delayed notification creation, scheduled processing, and notification visibility through the account notifications endpoint
+- Verified that rerunning scheduled processing does not redeliver already-delivered notifications
+
+

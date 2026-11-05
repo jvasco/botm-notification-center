@@ -2,7 +2,7 @@ import Router from '@koa/router';
 import { processCsvNotification, processFilterNotifications } from "../services/notificationProcessingService";
 import { getAccountNotifications, markNotificationAsClicked } from "../services/notificationDeliveryService";
 import { getActiveNotificationDefinitions } from '../services/notificationDefinitionService';
-import { processNotificationEvent } from '../services/notificationEventService';
+import { processNotificationEvent, processScheduledNotifications } from '../services/notificationEventService';
 const router = new Router();
 
 router.post("/notifications/process-filter-notifications", async (ctx) => {
@@ -105,6 +105,18 @@ router.post("/notifications/process-event", async (ctx) => {
         console.error(`Error processing event ${eventType} for account ${accountId}:`, error);
         ctx.status = 500;
         ctx.body = { message: "An error occurred while processing the notification event." };
+    }
+});
+
+router.post("/notifications/process-scheduled-notifications", async (ctx) => {
+    try {
+        const deliveriesProcessed = await processScheduledNotifications();
+        ctx.status = 200;
+        ctx.body = { message: "Scheduled notifications processed successfully.", deliveriesProcessed };
+    } catch (error) {
+        console.error("Error processing scheduled notifications:", error);
+        ctx.status = 500;
+        ctx.body = { message: "An error occurred while processing scheduled notifications." };
     }
 });
 

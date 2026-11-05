@@ -21,5 +21,19 @@ This service supports three types of notification mechanisms:
 
 - Multiple rows per notification_definition for different filters vs one row containing all filters. I chose to have multiple rows per definition instead of storing all filters in one single row for each definition. This is a trade off (space vs cleanliness) but in my opinion this approach is much more readable and prevents the possibility of bad data in our filters
 
+### Delayed EVENT Notification Scheduling
+EVENT notifications may require a delay between the triggering event and when the notification becomes visible to an account. An example might be: we want to send the user a notification 3 days after they sign up.
+
+Decided to reuse the existing notfication_deliveries table by adding a nullable scheduled_at column. Delayed notifications are inserted with a future scheduled_at timestamp and delivered_at = NULL.
+
+A separate processing function identifies notifications whose scheudled time has arrive and sets their delivered_at timestamp and makes appropriate updates.
+
+Rationale:
+- Changing the notification_deliveries table allows us to avoid introducing an additional scheduling table
+
+Tradeoffs:
+- Scheduled notifications require a separate process to run periodically (exposed via API endpoint). Ideally in a production scenario we introduce a scheduled job to check for notifications ready to be delivered.
+- Delivery may occur later than scheduled_at if processing is delayed
+
 ### Possible Failure Scenarios
 - I identified a failure scenario where CSV deliveries could be created without recipients being marked as process. Originally I had one DB transaction where I was adding a delivery to notification_deliveries and then a separate transaction to mark the recipient as processed in notification_csv_recipients. I changed this to do both transactions atomically and avoid this edge case where one transaction succeeds and the other fails
