@@ -1,6 +1,6 @@
 import Router from '@koa/router';
 import { processCsvNotification, processFilterNotifications } from "../services/notificationProcessingService";
-import { getAccountNotifications, markNotificationAsClicked } from "../services/notificationDeliveryService";
+import { deleteExpiredNotifications, getAccountNotifications, markNotificationAsClicked } from "../services/notificationDeliveryService";
 import { getActiveNotificationDefinitions } from '../services/notificationDefinitionService';
 import { processNotificationEvent, processScheduledNotifications } from '../services/notificationEventService';
 const router = new Router();
@@ -118,6 +118,14 @@ router.post("/notifications/process-scheduled-notifications", async (ctx) => {
         ctx.status = 500;
         ctx.body = { message: "An error occurred while processing scheduled notifications." };
     }
+});
+
+router.post('/notifications/cleanup-expired', async (ctx) => {
+    const deletedCount = await deleteExpiredNotifications();
+
+    ctx.body = {
+        deletedCount
+    };
 });
 
 export default router;

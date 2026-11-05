@@ -60,7 +60,14 @@ Tradeoffs
 
 - The cleanup job has to be triggered manually. Ideally this is also something that is run semi-regularly (once a day).
 
+### Notification Visibility, Removal, and Retention
 
+Active vs Removed:
+- is_active: Controls whether a definition is eligible to generate new deliveries. Deactivating a definition does not hide notifications already delivered.
 
-### Possible Failure Scenarios
-- I identified a failure scenario where CSV deliveries could be created without recipients being marked as process. Originally I had one DB transaction where I was adding a delivery to notification_deliveries and then a separate transaction to mark the recipient as processed in notification_csv_recipients. I changed this to do both transactions atomically and avoid this edge case where one transaction succeeds and the other fails
+- removed_at: Controls whether a notification remains visible in the application. Once set, all existing deliveries associated with that definition are excluded from notification retrieval.
+
+Physical Cleanup:
+- Expired notification deliveries are deleted separately from notification retrieval through deleteExpiredNotifications().
+
+- This separation ensures that expired notifications stop appearing immediately at the calendar-month boundary, regardless of whether database cleanup has run.

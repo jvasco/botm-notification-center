@@ -1,5 +1,6 @@
 CREATE TABLE `notification_definitions`(
     `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    `name` VARCHAR(255) NOT NULL,
     `type` ENUM('FILTER', 'CSV', 'EVENT') NOT NULL COMMENT 'FILTER, CSV, or EVENT',
     `icon` VARCHAR(255) NOT NULL,
     `headline` VARCHAR(255) NOT NULL,
@@ -17,7 +18,7 @@ CREATE TABLE `notification_definitions`(
     `scheduled_at` DATETIME NULL COMMENT 'For scheduling CSV notifications only',
     `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
     ON UPDATE CURRENT_TIMESTAMP,
-    INDEX `idx_definitions_type_active` (`type`, `active`)
+    INDEX `idx_definitions_type_active` (`type`, `is_active`)
 );
 CREATE TABLE `account`(
     `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -32,6 +33,7 @@ CREATE TABLE `notification_deliveries`(
     `account_id` BIGINT UNSIGNED NOT NULL COMMENT 'FK to account table',
     `delivered_at` DATETIME NULL,
     `clicked_at` DATETIME NULL,
+    `scheduled_at` DATETIME NULL,
     `idempotency_key` VARCHAR(255) NOT NULL,
     UNIQUE (`notification_definition_id`, `idempotency_key`),
     INDEX idx_deliveries_account_delivered (`account_id`, `delivered_at`)

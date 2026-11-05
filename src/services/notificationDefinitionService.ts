@@ -20,6 +20,7 @@ export async function getActiveNotificationDefinitions(): Promise<NotificationDe
     LEFT JOIN notification_definition_filters f
       ON nd.id = f.notification_definition_id
     WHERE nd.is_active = 1
+    AND nd.removed_at IS NULL
   `);
 
   const definitions = new Map<number, NotificationDefinition>();

@@ -53,6 +53,7 @@ export async function getAccountNotifications(accountId: number): Promise<any[]>
             CURRENT_DATE - INTERVAL 1 MONTH,
             '%Y-%m-01'
         )
+            AND def.removed_at IS NULL
         ORDER BY del.delivered_at DESC
         `,
         [accountId]

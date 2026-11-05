@@ -85,3 +85,18 @@ Will use this file to keep track of progress on the project
 - Updated the default delivery key generation to use UUIDs rather than minute-based timestamps.
 - Updated notification retrieval to use calendar-month boundaries instead of a rolling one-month window
 - Added a cleanup function to delete expired notification deliveries
+
+## 6 - Notification Processing Verification and Retention
+
+### Goals
+- Test all MVP flows and compare results to original requirements
+- Look over specs doc and confirm we address all requirements
+
+### Work Completed
+- FILTER: Verified that eligible accounts receive notifications and repeated processing within the same calendar month does not create duplicates.
+- EVENT: Verified that delayed notifications are created with a future scheduled_at and NULL delivered_at, remain hidden until due, and become visible after scheduled processing.
+- CSV: Verified that recipients are marked PROCESSED, deliveries are created, and repeated processing does not generate duplicates.
+- Remove from app: Updated notification retrieval to exclude definitions with removed_at IS NOT NULL. Verified that removed notifications disappear for existing recipients.
+- Inactive: Verified that deactivating a definition does not hide previously delivered notifications.
+- Implemented visibility filtering using calendar-month boundaries rather than a rolling two-month interval.
+- Verified that notifications from the previous calendar month remain visible, older notifications are hidden, and cleanup removes expired delivery rows.
