@@ -20,3 +20,24 @@ Will use this file to keep track of progress on the project
 - Used AI to accelerate initial project setup and generate boilerplate configuration and application code
 - Reviewed and adapted generated code to fit the intended application structure
 
+## Session 2 - Creating the Database Schema
+
+### Goals
+- Create the separate entities needed for the project
+- Understand which entities can simply be referenced and don't need to be created, and which are required for MVP for project
+- Understand relationships between tables/entities
+- Create the schema and fill in tables with test data
+- Begin implementing the notification processing workflow
+
+### Work Completed
+- Created the MySQL DB schema
+- Added mock data to test relationships, constraints, etc
+- Implemented FILTER notification recipient selection based on account attributes and notification filters
+- Added endpoints to process FILTER notifications and get delivered notifications for users
+- Created a service to persist notification deliveries in DB
+
+### AI/Additional Tooling
+- Used drawsql.app to map out and create the initial DB schema, then passed it through ChatGPT to confirm structure against requirements
+- Used ChatGPT to create mock data for tables
+
+
