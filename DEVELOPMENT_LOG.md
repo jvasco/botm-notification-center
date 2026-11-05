@@ -86,7 +86,7 @@ Will use this file to keep track of progress on the project
 - Updated notification retrieval to use calendar-month boundaries instead of a rolling one-month window
 - Added a cleanup function to delete expired notification deliveries
 
-## 6 - Notification Processing Verification and Retention
+## Session 6 - Notification Processing Verification and Retention
 
 ### Goals
 - Test all MVP flows and compare results to original requirements
@@ -100,3 +100,14 @@ Will use this file to keep track of progress on the project
 - Inactive: Verified that deactivating a definition does not hide previously delivered notifications.
 - Implemented visibility filtering using calendar-month boundaries rather than a rolling two-month interval.
 - Verified that notifications from the previous calendar month remain visible, older notifications are hidden, and cleanup removes expired delivery rows.
+
+## Session 7 - Automated Testing
+### Work Done
+- Used ChatGPT to generate automated integration tests
+- Added three tests covering:
+FILTER recipient eligibility with multiple criteria.
+
+OR logic within the same filter type.
+
+Notification delivery idempotency, verifying that duplicate deliveries are prevented.
+- Did not get to spend too much time on this part, ideally would have had more integration tests testing out the various different edge cases and requirements

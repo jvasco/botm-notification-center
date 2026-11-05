@@ -322,6 +322,28 @@ Verified scenarios include:
 | Expired notification visibility and cleanup | Passed |
 | CSV scheduling behavior | Passed locally |
 
+## Testing
+
+Run the automated tests with:
+
+```bash
+npm test
+```
+
+The integration tests cover:
+
+- FILTER recipient eligibility using multiple criteria.
+- OR logic for multiple values of the same filter type.
+- Duplicate delivery prevention using idempotency keys.
+
+Tests require a running MySQL database with the expected seed data. They execute against the configured database rather than an isolated test database.
+
+TypeScript compilation can be verified with:
+
+```bash
+npx tsc --noEmit
+```
+
 ## Design Decisions and Tradeoffs
 
 This implementation prioritizes the core business rules, database consistency, and a straightforward architecture suitable for the take-home's time constraints.
